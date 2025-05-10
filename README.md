@@ -1,68 +1,61 @@
-# 📂 Підрахунок унікальних значень та перевірка паролів хешем
+# 📂 Unique Value Counting & Password Checking with Hashing
 
-## 🔐 Скрипт `check_password.py`
+## 🔐 Script: check_password.py
+This script implements a Bloom Filter data structure that efficiently checks whether a given password has already been added before.
 
-Цей скрипт реалізує **структуру Bloom Filter**, яка дозволяє ефективно перевіряти, чи був вже раніше доданий певний пароль.
-
-### Особливості:
-- Ефективна перевірка без точного збереження всіх значень.
-- Ймовірність **помилкових позитивних** відповідей.
-- Застосування хеш-функцій (`mmh3`) для встановлення та перевірки бітів.
-
----
-
-## 🌐 Скрипт `uniq_ips.py`
-
-Цей скрипт виконує **аналіз лог-файлу** `lms-stage-access.log`, щоб підрахувати кількість унікальних IP-адрес за двома підходами:
-
-1. **Точний підрахунок** — за допомогою вбудованої структури `set`.
-2. **Наближений підрахунок** — з використанням алгоритму [HyperLogLog](hyperloglog.py).
-
-### 📊 Порівняння методів:
-
-| Метрика               | Точний підрахунок | HyperLogLog          |
-|------------------------|-------------------|-----------------------|
-| Унікальні елементи     | 28                | 28.0240               |
-| Час виконання (сек)    | 0.001761          | 0.022105              |
-
-Спостерігаємо, що HyperLogLog має помітно більший час виконання в даному випадку через обчислення та збереження статистики:
-- використовує хеш-функцію для кожного елемента.
-- Після хешування, визначає позицію першого ведучого нуля у двійковому представленні.
-- Оновлює регістри (масив довжин ведучих нулів) — а це додаткові обчислення.
-- Після завершення — об’єднує статистику з усіх регістрів для фінальної оцінки.
-
-Ці обчислення створюють додаткове навантаження, яке не виправдане, коли у нас всього 28 елементів.
-
-HyperLogLog буде більш ефективним за пам'яттю та часом коли:
-- Даних багато: мільйони і більше записів.
-- Потрібна лише наближена кількість унікальних значень, а не самі елементи.
-- Обмежені ресурси оперативної пам’яті (RAM), як у великих потокових системах чи IoT.
-
-### Висновки:
-- **Точний метод** дає абсолютно точний результат, але споживає більше памʼяті при великих обсягах даних.
-- **HyperLogLog** забезпечує дуже швидкий і памʼяттєво-ефективний підрахунок з похибкою менше 1%, що особливо корисно при великих потоках логів або великих обʼємах даних.
-- Для малих даних: **Точний підрахунок** за допомогою set буде значно швидшим і точнішим (що ми спостерігали в цьому порівнянні).
-- Для великих даних: **HyperLogLog** стане більш ефективним з точки зору пам'яті та часу, але буде давати наближені результати.
+### Features:
+- Efficient membership testing without storing all values exactly.
+- Possibility of false positives.
+- Uses hash functions (mmh3) to set and check bits.
 
 ---
 
-## 📁 Структура проекту
+## 🌐 Script: uniq_ips.py
+This script performs log file analysis on lms-stage-access.log to count the number of unique IP addresses using two approaches:
 
-```
-.
-├── check_password.py     # Реалізація Bloom Filter для перевірки паролів
-├── uniq_ips.py           # Аналіз логів: точний і наближений підрахунок IP
-├── hyperloglog.py        # Реалізація HyperLogLog-алгоритму
-├── lms-stage-access.log  # Приклад лог-файлу з IP-адресами
-└── README.md             # Документація проекту
-```
+- Exact count — using Python’s built-in set data structure.
+- Approximate count — using the HyperLogLog algorithm.
 
----
+### 📊 Method Comparison:
 
-## 🛠️ Вимоги
+| Metric                   | Точний підрахунок  | HyperLogLog        |
+|--------------------------|--------------------|--------------------|
+| Unique elements	         |   28	              |   28.0240          |
+|  Execution time (sec)	   |   0.001761	        |   0.022105         |
 
+We observe that HyperLogLog takes noticeably more time in this case due to extra computations for statistics:
+- It hashes each element.
+- Determines the position of the first leading zero in the binary representation.
+- Updates registers (array of leading zero lengths) — which adds computational overhead.
+- After all elements are processed, it merges stats from all registers for the final estimate.
+
+
+These steps add overhead that isn't justified when there are only 28 elements.
+
+HyperLogLog becomes more efficient in terms of memory and time when:
+- There is a large volume of data: millions of entries or more.
+- An approximate count of unique values is sufficient.
+- Memory (RAM) is limited — as in large-scale streaming systems or IoT scenarios.
+
+### Conclusions:
+**Exact method** gives a 100% accurate result but consumes more memory with large datasets.
+
+**HyperLogLog** offers fast, memory-efficient counting with less than 1% error, which is ideal for large-scale logs or data streams.
+
+For small datasets: the **Exact count** using set is faster and more accurate (as observed here).
+
+For large datasets: **HyperLogLog** is more memory- and time-efficient, though it provides approximate results.
+
+## 📁 Project Structure
+
+    ├── check_password.py     # Bloom Filter for password checking
+    ├── uniq_ips.py           # Log analysis: exact and approximate IP counting
+    ├── hyperloglog.py        # HyperLogLog algorithm implementation
+    ├── lms-stage-access.log  # Example log file with IP addresses
+    └── README.md             # Project documentation
+
+## 🛠️ Requirements
 - Python 3.8+
-- Бібліотека `mmh3` для Bloom Filter:
-  ```bash
-  pip install mmh3
-  ```
+- mmh3 library for the Bloom Filter:
+    
+      pip install mmh3
